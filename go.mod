@@ -1,4 +1,4 @@
-module github.com/git-yongge/go-logger
+module github.com/tietemp/go-logger
 
 go 1.14
 

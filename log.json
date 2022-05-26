@@ -11,5 +11,11 @@
     "maxdays": -1,
     "append": true,
     "permit": "0660"
+  },
+  "Elastic": {
+    "open": true,
+    "addr": "http://127.0.0.1:9200",
+    "index": "tie-logs",
+    "level": "DEBG"
   }
 }

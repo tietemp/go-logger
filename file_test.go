@@ -187,3 +187,15 @@ func BenchmarkFileOnGoroutine(b *testing.B) {
 	}
 	os.Remove("test4.log")
 }
+
+func TestElastic(t *testing.T) {
+	err := SetLogger("log.json")
+	if err != nil {
+		t.Fatal("SetLogger", err)
+	}
+	//Debug("[SVR] NewServer Data dir", "path", "./chain-data")
+	Info("[SVR] NewServer Data dir", "path", "./chain-data")
+	//Warn("[SVR] NewServer Data dir", "path", "./chain-data")
+	//Error("[SVR] NewServer Data dir", "path", "./chain-data")
+
+}

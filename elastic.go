@@ -17,8 +17,8 @@ type elasticLogger struct {
 	Addr     string `json:"addr"`
 	Index    string `json:"index"`
 	Level    string `json:"level"`
+	Open     bool   `json:"open"`
 	LogLevel int
-	Open     bool
 	Es       *elasticsearch.Client
 	Mu       sync.RWMutex
 }
@@ -32,11 +32,15 @@ type MsgBody struct {
 }
 
 type ElasticLogBody struct {
-	Level     string    `json:"level"`
-	Path      string    `json:"path"`
-	Name      string    `json:"name"`
-	Content   string    `json:"content"`
-	TimeStamp time.Time `json:"timestamp"`
+	TimeStamp int64  `json:"timestamp"`
+	Level     int64  `json:"level"`
+	Path      string `json:"path"`
+	Name      string `json:"name"`
+	Content   string `json:"content"`
+}
+
+func init() {
+	Register(AdapterElastic, &elasticLogger{LogLevel: LevelTrace})
 }
 
 // Init 初始化
@@ -47,6 +51,7 @@ func (e *elasticLogger) Init(jsonConfig string) error {
 
 	err := json.Unmarshal([]byte(jsonConfig), &e)
 	if err != nil {
+		fmt.Println("unmarshal es err", err, jsonConfig)
 		return err
 	}
 
@@ -57,8 +62,9 @@ func (e *elasticLogger) Init(jsonConfig string) error {
 	if lv, ok := LevelMap[e.Level]; ok {
 		e.LogLevel = lv
 	}
-	err = e.connectElastic()
+	err = e.getClient()
 	if err != nil {
+		fmt.Println("")
 		return err
 	}
 	return nil
@@ -77,7 +83,7 @@ func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int)
 	}
 
 	if e.Es == nil {
-		err := e.connectElastic()
+		err := e.getClient()
 		if err != nil {
 			return err
 		}
@@ -89,22 +95,16 @@ func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int)
 		return err
 	}
 
-	esBody := new(ElasticLogBody)
-	esBody.Name = body.Name
-	esBody.Level = body.Level
-	esBody.Content = body.Content
-	esBody.Path = body.Path
+	fmt.Println("===>msg", msg)
 
-	// 必须转换为时间格式，否则es不支持
-	timeTemplate := "2006-01-02 15:04:05"
-	stamp, err := time.ParseInLocation(timeTemplate, body.Time, time.Local)
-	if err != nil {
-		return err
-	}
-	esBody.TimeStamp = stamp.UTC()
+	esBody := new(ElasticLogBody)
+	esBody.TimeStamp = time.Now().UnixMicro() / 1000
+	esBody.Name = body.Name
+	esBody.Level = e.getLevelNum(body.Level)
+	esBody.Content = strings.Replace(body.Content, "                          ", " ", -1)
+	esBody.Path = body.Path
 	esByte, _ := json.Marshal(esBody)
-	go e.saveMessage(string(esByte))
-	return nil
+	return e.saveMessage(string(esByte))
 }
 
 // Destroy 销毁
@@ -112,8 +112,8 @@ func (e *elasticLogger) Destroy() {
 	e.Es = nil
 }
 
-// connectElastic 链接elasticsearch
-func (e *elasticLogger) connectElastic() (err error) {
+// getClient get elastic client
+func (e *elasticLogger) getClient() (err error) {
 	cfg := elasticsearch.Config{Addresses: []string{e.Addr}}
 	e.Es, err = elasticsearch.NewClient(cfg)
 	if err != nil {
@@ -122,7 +122,7 @@ func (e *elasticLogger) connectElastic() (err error) {
 	return nil
 }
 
-// saveMessage 存储日志到服务器
+// saveMessage save message to esdb
 func (e *elasticLogger) saveMessage(msg string) error {
 	dateTime := strconv.FormatInt(time.Now().UnixNano(), 10)
 	req := esapi.IndexRequest{
@@ -133,12 +133,24 @@ func (e *elasticLogger) saveMessage(msg string) error {
 	}
 	res, err := req.Do(context.Background(), e.Es)
 	if err != nil {
+		fmt.Println("do err", err)
 		return err
 	}
 	res.Body.Close()
 	return nil
 }
 
-func init() {
-	Register(AdapterElastic, &elasticLogger{LogLevel: LevelTrace})
+func (e *elasticLogger) getLevelNum(levelStr string) int64 {
+	switch levelStr {
+	case "DEBG":
+		return 10
+	case "INFO":
+		return 20
+	case "WARN":
+		return 30
+	case "EROR":
+		return 40
+	default:
+		return 0
+	}
 }

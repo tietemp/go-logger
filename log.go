@@ -55,10 +55,10 @@ var levelPrefix = [LevelTrace + 1]string{
 
 const (
 	logTimeDefaultFormat = "2006-01-02 15:04:05.000" // 日志输出默认格式
-	AdapterConsole       = "console"             // 控制台输出配置项
-	AdapterFile          = "file"                // 文件输出配置项
-	AdapterConn          = "conn"                // 网络输出配置项
-	AdapterElastic       = "elastic"             // elastic输出配置项
+	AdapterConsole       = "console"                 // 控制台输出配置项
+	AdapterFile          = "file"                    // 文件输出配置项
+	AdapterConn          = "conn"                    // 网络输出配置项
+	AdapterElastic       = "elastic"                 // elastic输出配置项
 )
 
 // log provider interface
@@ -156,8 +156,10 @@ func (this *LocalLogger) SetLogger(adapterName string, configs ...string) error 
 			break
 		}
 	}
+
 	logger, ok := adapters[adapterName]
 	if !ok {
+		fmt.Println("err: unknown adaptername ", adapterName)
 		return fmt.Errorf("unknown adaptername %s (forgotten Register?)", adapterName)
 	}
 
@@ -242,7 +244,7 @@ func (this *LocalLogger) writeMsg(logLevel int, msg string, v ...interface{}) er
 	if logLevel <= 4 {
 		src := ""
 		_, file, lineno, ok := runtime.Caller(this.callDepth)
-		var strim string = "src/"
+		var strim = "src/"
 		if this.usePath != "" {
 			strim = this.usePath
 		}
@@ -474,17 +476,17 @@ func Trace(f interface{}, v ...interface{}) {
 //	}
 //	return fmt.Sprintf(msg, v...)
 //}
-func strSpecifiedLength(x interface{},c int) string {
+func strSpecifiedLength(x interface{}, c int) string {
 	strX := x.(string)
 	lenX := len(strX)
-	if lenX / c >= 0 && lenX / c < 1{
+	if lenX/c >= 0 && lenX/c < 1 {
 		y := strings.Repeat(" ", c-lenX)
-		strX = strX+y
+		strX = strX + y
 		return strX
 	}
-	if lenX / c >= 1{
-		y := strings.Repeat(" ", int(lenX / c+1)*c -lenX)
-		strX = strX+y
+	if lenX/c >= 1 {
+		y := strings.Repeat(" ", int(lenX/c+1)*c-lenX)
+		strX = strX + y
 	}
 	return strX
 }
@@ -501,7 +503,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
 			//format string
 		} else if len(v) == 1 {
-			return fmt.Sprintf("%v%v", strSpecifiedLength(f,50), v[0])
+			return fmt.Sprintf("%v%v", strSpecifiedLength(f, 50), v[0])
 			//return fmt.Sprintf("%v %v", f, v[0])
 		} else {
 			str := ""
@@ -516,7 +518,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 					str += fmt.Sprintf("%v ", val)
 				}
 			}
-			msg = fmt.Sprintf("%v%v",strSpecifiedLength(msg,50),strings.TrimSpace(str))
+			msg = fmt.Sprintf("%v%v", strSpecifiedLength(msg, 50), strings.TrimSpace(str))
 			//msg = fmt.Sprintf("%v          %v", msg, strings.TrimSpace(str))
 		}
 	default:
@@ -524,7 +526,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 		if len(v) == 0 {
 			return msg
 		} else if len(v) == 1 {
-			return fmt.Sprintf("%v%v",strSpecifiedLength(f,50),v[0])
+			return fmt.Sprintf("%v%v", strSpecifiedLength(f, 50), v[0])
 			//return fmt.Sprintf("%v %v", f, v[0])
 		} else {
 			str := ""
@@ -539,7 +541,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 					str += fmt.Sprintf("%v ", val)
 				}
 			}
-			return fmt.Sprintf("%v%v",strSpecifiedLength(msg,50),strings.TrimSpace(str))
+			return fmt.Sprintf("%v%v", strSpecifiedLength(msg, 50), strings.TrimSpace(str))
 			//return fmt.Sprintf("%v          %v", msg, strings.TrimSpace(str))
 		}
 	}

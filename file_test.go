@@ -189,13 +189,34 @@ func BenchmarkFileOnGoroutine(b *testing.B) {
 }
 
 func TestElastic(t *testing.T) {
-	err := SetLogger("log.json")
+	logJson := fmt.Sprintf(`{
+	  "TimeFormat":"2006-01-02 15:04:05",
+	  "Console": {
+		"level": "DEBG",
+		"color": true
+	  },
+	  "File": {
+		"filename": "test.log",
+		"level": "DEBG",
+		"daily": true,
+		"maxdays": -1,
+		"append": true,
+		"permit": "0660"
+	  },
+	  "Elastic": {
+		"open": %v,
+		"addr": "http://127.0.0.1:9200",
+		"index": "chainlogs",
+		"level": "DEBG"
+	  }
+	}`, true)
+	err := SetLogger(logJson)
 	if err != nil {
 		t.Fatal("SetLogger", err)
 	}
-	//Debug("[SVR] NewServer Data dir", "path", "./chain-data")
-	//Info("[SVR] NewServer Data dir", "path", "./chain-data")
+	Debug("[SVR] NewServer Data dir", "path", "./chain-data")
+	Info("[SVR] NewServer Data dir 2", "path", "./chain-data")
 	//Warn("[SVR] NewServer Data dir", "path", "./chain-data")
-	Error("NewServer start err", "err", "not found data-dir")
+	//Error("NewServer start err", "err", "not found data-dir")
 
 }

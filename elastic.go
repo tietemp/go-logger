@@ -21,6 +21,7 @@ type elasticLogger struct {
 	LogLevel int
 	Es       *elasticsearch.Client
 	Mu       sync.RWMutex
+	HC       *HttpClient
 }
 
 type MsgBody struct {
@@ -38,6 +39,32 @@ type ElasticLogBody struct {
 	Name      string `json:"name"`
 	Content   string `json:"content"`
 }
+
+var logIndexBody = `{
+    "mappings": {
+        "properties": {
+            "timestamp": {
+                "type": "date"
+            },
+            "level": {
+                "type": "short"
+            },
+            "name": {
+                "type": "keyword"
+            },
+            "content": {
+                "type": "keyword"
+            }
+        }
+    },
+    "settings": {
+        "index": {
+            "max_result_window": 2000000000,
+            "number_of_shards": 1,
+            "number_of_replicas": 1
+        }
+    }
+}`
 
 func init() {
 	Register(AdapterElastic, &elasticLogger{LogLevel: LevelTrace})
@@ -67,7 +94,8 @@ func (e *elasticLogger) Init(jsonConfig string) error {
 		fmt.Println("")
 		return err
 	}
-	return nil
+	e.HC = NewHttpClient(50, 50, 5)
+	return e.CreateIndex()
 }
 
 // LogWrite 写操作
@@ -136,6 +164,31 @@ func (e *elasticLogger) saveMessage(msg string) error {
 	}
 	res.Body.Close()
 	return nil
+}
+
+// CreateIndex create logger elastic index
+func (e *elasticLogger) CreateIndex() error {
+	if len(e.Index) == 0 {
+		return fmt.Errorf("please set es index")
+	}
+
+	if e.CheckIndex() == true {
+		return nil
+	}
+
+	header := make(map[string]string)
+	header["Content-Type"] = "application/json"
+	_, err := e.HC.Request(e.Addr+"/"+e.Index, "PUT", logIndexBody, header)
+	return err
+}
+
+// CheckIndex Check if the index exists
+func (e *elasticLogger) CheckIndex() bool {
+	res, _ := e.HC.Request(e.Addr+"/"+e.Index, "GET", "", nil)
+	if strings.Count(res, "index_not_found_exception") > 0 {
+		return false
+	}
+	return true
 }
 
 func (e *elasticLogger) getLevelNum(levelStr string) int64 {

@@ -194,8 +194,8 @@ func TestElastic(t *testing.T) {
 		t.Fatal("SetLogger", err)
 	}
 	//Debug("[SVR] NewServer Data dir", "path", "./chain-data")
-	Info("[SVR] NewServer Data dir", "path", "./chain-data")
+	//Info("[SVR] NewServer Data dir", "path", "./chain-data")
 	//Warn("[SVR] NewServer Data dir", "path", "./chain-data")
-	//Error("[SVR] NewServer Data dir", "path", "./chain-data")
+	Error("NewServer start err", "err", "not found data-dir")
 
 }

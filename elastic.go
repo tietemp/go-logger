@@ -95,8 +95,6 @@ func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int)
 		return err
 	}
 
-	fmt.Println("===>msg", msg)
-
 	esBody := new(ElasticLogBody)
 	esBody.TimeStamp = time.Now().UnixMicro() / 1000
 	esBody.Name = body.Name

@@ -148,7 +148,6 @@ func (this *LocalLogger) SetLogger(adapterName string, configs ...string) error 
 	for i, l = range this.outputs {
 		if l.name == adapterName {
 			if l.config == config {
-				//配置没有变动，不重新设置
 				return fmt.Errorf("you have set same config for this adaptername %s", adapterName)
 			}
 			l.Logger.Destroy()
@@ -453,29 +452,6 @@ func Trace(f interface{}, v ...interface{}) {
 	defaultLogger.Trace(formatLog(f, v...))
 }
 
-//func formatLog(f interface{}, v ...interface{}) string {
-//	var msg string
-//	switch f.(type) {
-//	case string:
-//		msg = f.(string)
-//		if len(v) == 0 {
-//			return msg
-//		}
-//		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
-//			//format string
-//		} else {
-//			//do not contain format char
-//			msg += strings.Repeat(" %v", len(v))
-//		}
-//	default:
-//		msg = fmt.Sprint(f)
-//		if len(v) == 0 {
-//			return msg
-//		}
-//		msg += strings.Repeat(" %v", len(v))
-//	}
-//	return fmt.Sprintf(msg, v...)
-//}
 func strSpecifiedLength(x interface{}, c int) string {
 	strX := x.(string)
 	lenX := len(strX)
@@ -504,7 +480,6 @@ func formatLog(f interface{}, v ...interface{}) string {
 			//format string
 		} else if len(v) == 1 {
 			return fmt.Sprintf("%v%v", strSpecifiedLength(f, 50), v[0])
-			//return fmt.Sprintf("%v %v", f, v[0])
 		} else {
 			str := ""
 			for key, val := range v {
@@ -519,7 +494,6 @@ func formatLog(f interface{}, v ...interface{}) string {
 				}
 			}
 			msg = fmt.Sprintf("%v%v", strSpecifiedLength(msg, 50), strings.TrimSpace(str))
-			//msg = fmt.Sprintf("%v          %v", msg, strings.TrimSpace(str))
 		}
 	default:
 		msg = fmt.Sprint(f)
@@ -527,7 +501,6 @@ func formatLog(f interface{}, v ...interface{}) string {
 			return msg
 		} else if len(v) == 1 {
 			return fmt.Sprintf("%v%v", strSpecifiedLength(f, 50), v[0])
-			//return fmt.Sprintf("%v %v", f, v[0])
 		} else {
 			str := ""
 			for key, val := range v {
@@ -542,7 +515,6 @@ func formatLog(f interface{}, v ...interface{}) string {
 				}
 			}
 			return fmt.Sprintf("%v%v", strSpecifiedLength(msg, 50), strings.TrimSpace(str))
-			//return fmt.Sprintf("%v          %v", msg, strings.TrimSpace(str))
 		}
 	}
 	return msg

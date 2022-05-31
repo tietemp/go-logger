@@ -131,11 +131,12 @@ func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int)
 	esBody.TimeStamp = time.Now().UnixMicro() / 1000
 	esBody.Name = body.Name
 	esBody.Level = e.getLevelNum(body.Level)
-	esBody.Content = strings.Replace(body.Content, "                        ", " ", -1)
+	esBody.Content = strings.Replace(body.Content, "   ", "", -1)
 	esBody.Path = body.Path
 	esBody.Owner = e.Owner
 	esByte, _ := json.Marshal(esBody)
-	return e.saveMessage(string(esByte))
+	go e.saveMessage(string(esByte))
+	return nil
 }
 
 // Destroy

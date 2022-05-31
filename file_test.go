@@ -207,7 +207,8 @@ func TestElastic(t *testing.T) {
 		"open": %v,
 		"addr": "http://127.0.0.1:9200",
 		"index": "chainlogs",
-		"level": "DEBG"
+		"level": "DEBG",
+		"owner": "node-1"
 	  }
 	}`, true)
 	err := SetLogger(logJson)

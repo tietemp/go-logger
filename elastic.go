@@ -17,6 +17,7 @@ type elasticLogger struct {
 	Addr     string `json:"addr"`
 	Index    string `json:"index"`
 	Level    string `json:"level"`
+	Owner    string `json:"owner"`
 	Open     bool   `json:"open"`
 	LogLevel int
 	Es       *elasticsearch.Client
@@ -38,6 +39,7 @@ type ElasticLogBody struct {
 	Path      string `json:"path"`
 	Name      string `json:"name"`
 	Content   string `json:"content"`
+	Owner     string `json:"owner"`
 }
 
 var logIndexBody = `{
@@ -50,6 +52,9 @@ var logIndexBody = `{
                 "type": "short"
             },
             "name": {
+                "type": "keyword"
+            },
+			"owner": {
                 "type": "keyword"
             },
             "content": {
@@ -91,14 +96,13 @@ func (e *elasticLogger) Init(jsonConfig string) error {
 	}
 	err = e.getClient()
 	if err != nil {
-		fmt.Println("")
 		return err
 	}
-	e.HC = NewHttpClient(50, 50, 5)
+	e.HC = NewHttpClient(0, 0, 3)
 	return e.CreateIndex()
 }
 
-// LogWrite 写操作
+// LogWrite
 func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int) error {
 
 	if level > e.LogLevel {
@@ -127,13 +131,14 @@ func (e *elasticLogger) LogWrite(when time.Time, msgText interface{}, level int)
 	esBody.TimeStamp = time.Now().UnixMicro() / 1000
 	esBody.Name = body.Name
 	esBody.Level = e.getLevelNum(body.Level)
-	esBody.Content = strings.Replace(body.Content, "                          ", " ", -1)
+	esBody.Content = strings.Replace(body.Content, "                        ", " ", -1)
 	esBody.Path = body.Path
+	esBody.Owner = e.Owner
 	esByte, _ := json.Marshal(esBody)
 	return e.saveMessage(string(esByte))
 }
 
-// Destroy 销毁
+// Destroy
 func (e *elasticLogger) Destroy() {
 	e.Es = nil
 }
